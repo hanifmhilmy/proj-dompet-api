@@ -5,5 +5,7 @@ Project Web API for money management.
 
 # FAQ
 
+```
 Q: Is it paid apps?
 A: It's completely free.
+```
