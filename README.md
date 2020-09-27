@@ -7,9 +7,12 @@ Project Web API for money management.
 
 - Fork the repository / clone this repository
 - Create a new branch from `main` branch, i.e.
-    > n.b. please follow this naming format
+    > n.b. please follow this naming format:
+    >
     > feat:<your_feature_name> for new feature implementation
+    >
     > bugf:<your_bugfix_name> for creating a bugfix
+    >
     > improve:<your_improvement_name> for improving 
 
     ```
