@@ -1,7 +1,7 @@
 # proj-dompet-api v0.1
 Project Web API for money management.
 
-#### Credit
+## Credit
 
 This non commercial/personal use project is inspired by the https://budgetbakers.com/, and https://www.realbyteapps.com/ 
 I love how the apps work and wanna try to create the similar apps for learning purposes. 
@@ -17,11 +17,11 @@ I love the architecture design, thank to share the design @hatajoe, hopefully I 
 - Create a new branch from `main` branch, i.e.
     > n.b. please follow this naming format:
     >
-    > feat:<your_feature_name> for new feature implementation
+    > feat_<your_feature_name> for new feature implementation
     >
-    > bugf:<your_bugfix_name> for creating a bugfix
+    > bugf_<your_bugfix_name> for creating a bugfix
     >
-    > improve:<your_improvement_name> for improving 
+    > improve_<your_improvement_name> for improving 
 
     ```
     git checkout -b feat:add_support_create_multiple_records
