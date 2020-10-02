@@ -1,4 +1,6 @@
-module "https://github.com/sarulabs/di"
+module (
+    "https://github.com/sarulabs/di"
+)
 
 go 1.14
 
