@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
+
 	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/sarulabs/di"
 )
@@ -20,6 +22,11 @@ type Container struct {
 	ctn di.Container
 }
 
+const (
+	// PostgreMainDB container built for db main connection
+	PostgreMainDB = "postgres-db"
+)
+
 // NewContainer is to init new app container
 func NewContainer(conf config.Config) (DIContainer, error) {
 	builder, err := di.NewBuilder()
@@ -27,7 +34,16 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		return nil, err
 	}
 
-	if err := builder.Add([]di.Def{}...); err != nil {
+	DB := database.NewDB(conf)
+	DB.Connect([]string{database.DBMain})
+	if err := builder.Add([]di.Def{
+		{
+			Name: PostgreMainDB,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return DB.GetDB(database.DBMain)
+			},
+		},
+	}...); err != nil {
 		return nil, err
 	}
 
