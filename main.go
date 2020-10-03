@@ -10,10 +10,13 @@ import (
 	"time"
 
 	"github.com/hanifmhilmy/proj-dompet-api/app/delivery"
+	"github.com/hanifmhilmy/proj-dompet-api/app/delivery/middlewares"
 	"github.com/hanifmhilmy/proj-dompet-api/app/registry"
 	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/julienschmidt/httprouter"
 )
+
+type middleware func(http.HandlerFunc) http.HandlerFunc
 
 func main() {
 	cnf, err := config.InitConfig()
@@ -62,9 +65,18 @@ func registerHTTPRoute(r *httprouter.Router, ctn registry.DIContainer) {
 	handler := delivery.NewHandler(ctn)
 
 	// initialize middleware for function
-	m := func(h http.HandlerFunc) http.HandlerFunc {
-		return ctn.HTTPMiddleware(h)
+	chainMiddleware := func(h http.HandlerFunc, m ...middleware) http.HandlerFunc {
+		if len(m) < 1 {
+			return h
+		}
+		wrapped := h
+
+		// loop in reverse to preserve middleware order
+		for i := len(m) - 1; i >= 0; i-- {
+			wrapped = m[i](wrapped)
+		}
+		return ctn.HTTPMiddleware(wrapped)
 	}
 
-	r.HandlerFunc("GET", "/ping", m(handler.Ping))
+	r.HandlerFunc("GET", "/ping", chainMiddleware(handler.Ping, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
 }
