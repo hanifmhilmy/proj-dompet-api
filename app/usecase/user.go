@@ -5,26 +5,29 @@ import (
 
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/services"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/auth"
 )
 
 type (
 	UserUsecaseInterface interface {
-		Authorization(ctx context.Context) (token string, err error)
+		Authorization(ctx context.Context, uname, password string) (token string, err error)
 	}
 
 	userUsecase struct {
-		r repository.UserRepositoryInterface
-		s services.UserServiceInterface
+		repo repository.UserRepositoryInterface
+		serv services.UserServiceInterface
+		auth auth.AuthInterface
 	}
 )
 
-func NewUserUsecase(repo repository.UserRepositoryInterface, service services.UserServiceInterface) UserUsecaseInterface {
-	return &UserUsecase{
-		r: repo,
-		s: service,
+func NewUserUsecase(repo repository.UserRepositoryInterface, service services.UserServiceInterface, auth auth.AuthInterface) UserUsecaseInterface {
+	return &userUsecase{
+		repo: repo,
+		serv: service,
+		auth: auth,
 	}
 }
 
-func (u UserUsecase) Authorization(ctx context.Context) (token string, err error) {
+func (u userUsecase) Authorization(ctx context.Context, uname, password string) (token string, err error) {
 	return
 }

@@ -13,7 +13,7 @@ I love the architecture design, thank to share the design @hatajoe, hopefully I 
 
 # How to contribute
 
-- Fork the repository / clone this repository
+- Fork the repository
 - Create a new branch from `main` branch, i.e.
     > n.b. please follow this naming format:
     >

@@ -14,6 +14,13 @@ type Config struct {
 		MasterMaxIdle int    `gcfg:"master-idle"`
 		MaxLifeConn   int64  `gcfg:"maxlifeconn"`
 	}
+	Redis struct {
+		Main string `gcfg:"main"`
+	}
+	Token struct {
+		AccessExpire  int64 `gcfg:"access-exp"`  // minutes
+		RefreshExpire int64 `gcfg:"refresh-exp"` // days
+	}
 }
 
 //InitConfig public function to initialize the config
