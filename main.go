@@ -18,6 +18,10 @@ import (
 
 type middleware func(http.HandlerFunc) http.HandlerFunc
 
+const (
+	port = "API_PORT"
+)
+
 func main() {
 	cnf, err := config.InitConfig()
 	if err != nil {
@@ -36,12 +40,12 @@ func main() {
 
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         "0.0.0.0:1234",
+		Addr:         "0.0.0.0:" + os.Getenv(port),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Println("Listening on port :1234")
+	log.Println("Listening on port :", os.Getenv(port))
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Println(err)
@@ -79,4 +83,5 @@ func registerHTTPRoute(r *httprouter.Router, ctn registry.DIContainer) {
 	}
 
 	r.HandlerFunc("GET", "/ping", chainMiddleware(handler.Ping, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
+	r.HandlerFunc("POST", "/auth", chainMiddleware(handler.Authorization, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions, middlewares.Authorization))
 }

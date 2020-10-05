@@ -3,6 +3,7 @@ package middlewares
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/helpers"
 )
@@ -35,6 +36,26 @@ func PanicRecoveryMiddleware(h http.HandlerFunc) http.HandlerFunc {
 				helpers.JSONResponse(w, http.StatusInternalServerError, rec)
 			}
 		}()
+		h(w, r)
+	}
+}
+
+// Authorization middleware to check verify the cookie and pass the value to context
+func Authorization(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: check the cookie value and then pass the value to context
+		bearToken := r.Header.Get("Authorization")
+		strArr := strings.Split(bearToken, " ")
+
+		authVal := ""
+		if len(strArr) == 2 {
+			authVal = strArr[1]
+		}
+
+		ctx := r.Context()
+		ctx = helpers.SetTokenContext(ctx, authVal)
+
+		r = r.WithContext(ctx)
 		h(w, r)
 	}
 }

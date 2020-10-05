@@ -4,6 +4,12 @@ import (
 	"log"
 
 	"github.com/go-gcfg/gcfg"
+	"github.com/joho/godotenv"
+)
+
+const (
+	SecretConst        = "API_SECRET"
+	SecretRefreshConst = "API_REFRESH_SECRET"
 )
 
 // Config is struct to store all the config for the app
@@ -14,11 +20,24 @@ type Config struct {
 		MasterMaxIdle int    `gcfg:"master-idle"`
 		MaxLifeConn   int64  `gcfg:"maxlifeconn"`
 	}
+	Redis struct {
+		Main string `gcfg:"main"`
+	}
+	Token struct {
+		AccessExpire  int64 `gcfg:"access-exp"`  // minutes
+		RefreshExpire int64 `gcfg:"refresh-exp"` // days
+	}
 }
 
 //InitConfig public function to initialize the config
 func InitConfig() (cnf Config, err error) {
-	err = gcfg.ReadFileInto(&cnf, "config/db.main.ini")
+	// Read the env file
+	err = godotenv.Load("config/files/app.env")
+	if err != nil {
+		log.Println("Fail to read env file")
+	}
+
+	err = gcfg.ReadFileInto(&cnf, "config/files/db.main.ini")
 	if err != nil {
 		log.Println("Fail to read config file")
 	}
