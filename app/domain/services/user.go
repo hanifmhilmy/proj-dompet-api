@@ -20,6 +20,12 @@ type (
 	}
 )
 
+func NewUserService(r repository.UserRepositoryInterface) UserServiceInterface {
+	return &userService{
+		repo: r,
+	}
+}
+
 func (u *userService) SaveCreatedUser(tx *sqlx.Tx, data model.SignUpDetails) error {
 	userID, err := u.repo.FindAccount(data.Username, data.Password)
 	if err != nil && errors.Cause(err) != sql.ErrNoRows {

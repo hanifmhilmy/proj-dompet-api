@@ -3,8 +3,14 @@ package registry
 import (
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
+	"github.com/hanifmhilmy/proj-dompet-api/app/domain/services"
+	"github.com/hanifmhilmy/proj-dompet-api/app/usecase"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/auth"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/sarulabs/di"
@@ -25,6 +31,7 @@ type Container struct {
 const (
 	// PostgreMainDB container built for db main connection
 	PostgreMainDB = "postgres-db"
+	UserUsecase   = "user-usecase"
 )
 
 // NewContainer is to init new app container
@@ -34,13 +41,26 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		return nil, err
 	}
 
-	DB := database.NewDB(conf)
-	DB.Connect([]string{database.DBMain})
+	db := database.NewDB(conf)
+	db.Connect([]string{database.DBMain})
 	if err := builder.Add([]di.Def{
 		{
 			Name: PostgreMainDB,
 			Build: func(ctn di.Container) (interface{}, error) {
-				return DB.GetDB(database.DBMain)
+				return db.GetDB(database.DBMain)
+			},
+		},
+		{
+			Name: UserUsecase,
+			Build: func(ctn di.Container) (interface{}, error) {
+				repo := repository.NewUserRepo(repository.Client{
+					DB: ctn.Get(PostgreMainDB).(*sqlx.DB),
+				})
+				auth := auth.NewAuth(os.Getenv(config.SecretConst), os.Getenv(config.SecretRefreshConst), auth.Options{
+					AccessExpire:  conf.Token.AccessExpire,
+					RefreshExpire: conf.Token.RefreshExpire,
+				})
+				return usecase.NewUserUsecase(repo, services.NewUserService(repo), auth), nil
 			},
 		},
 	}...); err != nil {

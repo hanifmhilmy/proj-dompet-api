@@ -135,3 +135,11 @@ func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*accessDetails, error) {
 func (a *auth) Refresh(refreshToken string) error {
 	return nil
 }
+
+// GetToken get encapsulated token data
+func (t *Token) GetToken() map[string]string {
+	return map[string]string{
+		"access_token":  t.accessToken,
+		"refresh_token": t.refreshToken,
+	}
+}

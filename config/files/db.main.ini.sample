@@ -8,3 +8,7 @@
     
 [Redis]
     main = "127.0.0.1:6379"
+
+[Token]
+    access-exp = 15
+    refresh-exp = 7

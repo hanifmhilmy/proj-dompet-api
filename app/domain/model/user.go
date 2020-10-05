@@ -26,8 +26,8 @@ type (
 
 	// LoginDetails exposed login detail struct
 	LoginDetails struct {
-		Username string
-		Password string
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
 	// SignUpDetails exposed signup model struct
