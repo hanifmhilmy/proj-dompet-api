@@ -37,6 +37,13 @@ type (
 		Username string `db:"username" json:"username"`
 		Password string `db:"password" json:"password"`
 	}
+
+	// AccessDetails detail of extracted token data
+	AccessDetails struct {
+		AccUUID     string
+		RefreshUUID string
+		UserID      int64
+	}
 )
 
 const (
@@ -45,6 +52,12 @@ const (
 	UserStatusPending = 2
 
 	UserActionBySystem = 0
+
+	UserNotFound = 0
+
+	LoggedInSuccess  = "Success login"
+	SignUpSuccess    = "User Created!"
+	UserUnauthorized = "Unauthorized"
 )
 
 // NewUser create new user account data

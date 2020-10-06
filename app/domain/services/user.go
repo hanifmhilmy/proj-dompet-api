@@ -2,8 +2,8 @@ package services
 
 import (
 	"database/sql"
-	"log"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/jmoiron/sqlx"
@@ -12,42 +12,58 @@ import (
 
 type (
 	UserServiceInterface interface {
-		SaveCreatedUser(tx *sqlx.Tx, data model.SignUpDetails) error
+		SaveCreatedUser(data model.SignUpDetails) error
 	}
 
 	userService struct {
-		repo repository.UserRepositoryInterface
+		clientDB    *sqlx.DB
+		clientRedis redis.Conn
+		repo        repository.UserRepositoryInterface
 	}
 )
 
-func NewUserService(r repository.UserRepositoryInterface) UserServiceInterface {
+func NewUserService(r repository.UserRepositoryInterface, db *sqlx.DB, redis redis.Conn) UserServiceInterface {
 	return &userService{
-		repo: r,
+		clientDB:    db,
+		clientRedis: redis,
+		repo:        r,
 	}
 }
 
-func (u *userService) SaveCreatedUser(tx *sqlx.Tx, data model.SignUpDetails) error {
+func (u *userService) SaveCreatedUser(data model.SignUpDetails) error {
+	tx, err := u.clientDB.Beginx()
+	if err != nil {
+		err = errors.Wrap(err, "[UserService] begin failed: ")
+		return err
+	}
 	userID, err := u.repo.FindAccount(data.Username, data.Password)
 	if err != nil && errors.Cause(err) != sql.ErrNoRows {
-		log.Println("[UserService] query failed: ", err)
+		err = errors.Wrap(err, "[UserService] query failed: ")
 		return err
 	}
 	if userID > 0 {
-		err = errors.New("[UserService] this user is already exist")
+		err = errors.Wrap(err, "[UserService] this user is already exist")
 		return err
 	}
 
 	// Save account
 	lastID, err := u.repo.SaveAccount(tx, data.Username, data.Password)
 	if err != nil {
-		log.Println("[UserService] query save account failed: ", err)
+		err = errors.Wrap(err, "[UserService] query save account failed: ")
 		return err
 	}
 
 	// Save account details
 	err = u.repo.SaveDetail(tx, lastID, data.Name, data.Email)
 	if err != nil {
-		log.Println("[UserService] query save detail failed: ", err)
+		err = errors.Wrap(err, "[UserService] query save detail failed: ")
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		err = errors.Wrap(err, "[UserService] commit failed ")
+		tx.Rollback()
 		return err
 	}
 

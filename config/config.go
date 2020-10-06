@@ -23,6 +23,13 @@ type Config struct {
 	Redis struct {
 		Main string `gcfg:"main"`
 	}
+	RedisOptions struct {
+		MaxActive      int
+		MaxIdle        int
+		Timeout        int64
+		IdlePingPeriod int64
+		PoolWaitMs     int64
+	}
 	Token struct {
 		AccessExpire  int64 `gcfg:"access-exp"`  // minutes
 		RefreshExpire int64 `gcfg:"refresh-exp"` // days
@@ -37,7 +44,7 @@ func InitConfig() (cnf Config, err error) {
 		log.Println("Fail to read env file")
 	}
 
-	err = gcfg.ReadFileInto(&cnf, "config/files/db.main.ini")
+	err = gcfg.ReadFileInto(&cnf, "config/files/dompet.main.ini")
 	if err != nil {
 		log.Println("Fail to read config file")
 	}

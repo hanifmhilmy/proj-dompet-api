@@ -5,14 +5,15 @@ import (
 	"net/http"
 	"os"
 
+	redigo "github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/services"
 	"github.com/hanifmhilmy/proj-dompet-api/app/usecase"
+	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/auth"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
 	"github.com/jmoiron/sqlx"
-
-	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/sarulabs/di"
 )
 
@@ -31,6 +32,7 @@ type Container struct {
 const (
 	// PostgreMainDB container built for db main connection
 	PostgreMainDB = "postgres-db"
+	RedigoClient  = "redigo-client"
 	UserUsecase   = "user-usecase"
 )
 
@@ -42,6 +44,7 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 	}
 
 	db := database.NewDB(conf)
+	rdg := redis.New(conf)
 	db.Connect([]string{database.DBMain})
 	if err := builder.Add([]di.Def{
 		{
@@ -51,16 +54,25 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 			},
 		},
 		{
+			Name: RedigoClient,
+			Build: func(ctn di.Container) (interface{}, error) {
+				return rdg.GetConn()
+			},
+		},
+		{
 			Name: UserUsecase,
 			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(*sqlx.DB)
+				redisClient := ctn.Get(RedigoClient).(redigo.Conn)
 				repo := repository.NewUserRepo(repository.Client{
-					DB: ctn.Get(PostgreMainDB).(*sqlx.DB),
+					DB:    dbClient,
+					Redis: redisClient,
 				})
 				auth := auth.NewAuth(os.Getenv(config.SecretConst), os.Getenv(config.SecretRefreshConst), auth.Options{
 					AccessExpire:  conf.Token.AccessExpire,
 					RefreshExpire: conf.Token.RefreshExpire,
 				})
-				return usecase.NewUserUsecase(repo, services.NewUserService(repo), auth), nil
+				return usecase.NewUserUsecase(repo, services.NewUserService(repo, dbClient, redisClient), auth), nil
 			},
 		},
 	}...); err != nil {
