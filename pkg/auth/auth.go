@@ -14,7 +14,7 @@ type (
 	AuthInterface interface {
 		CreateToken(uid int64) (token *Token, err error)
 		VerifyToken(tokenString string) (*jwt.Token, error)
-		ExtractTokenMetadata(token *jwt.Token) (*accessDetails, error)
+		ExtractTokenMetadata(token *jwt.Token) (*AccessDetails, error)
 	}
 
 	auth struct {
@@ -23,9 +23,9 @@ type (
 		opt Options
 	}
 
-	accessDetails struct {
-		uuid   string
-		userID int64
+	AccessDetails struct {
+		UUID   string
+		UserID int64
 	}
 
 	Options struct {
@@ -44,7 +44,7 @@ type (
 )
 
 const (
-	prefix = "[Auth Package] "
+	prefix = "[Auth Package]"
 )
 
 func NewAuth(accessSecret, refreshSecret string, opt Options) AuthInterface {
@@ -70,7 +70,7 @@ func (a *auth) CreateToken(uid int64) (token *Token, err error) {
 		"exp":         token.expireAccess,
 	}
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
-	token.accessToken, err = at.SignedString(a.as)
+	token.accessToken, err = at.SignedString([]byte(a.as))
 	if err != nil {
 		log.Println(prefix, "Fail at creating access token, err -> ", err)
 		return nil, err
@@ -82,7 +82,7 @@ func (a *auth) CreateToken(uid int64) (token *Token, err error) {
 		"exp":          token.expireRefresh,
 	}
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	token.refreshToken, err = rt.SignedString(a.rs)
+	token.refreshToken, err = rt.SignedString([]byte(a.rs))
 	if err != nil {
 		log.Println(prefix, "Fail at creating refresh token, err -> ", err)
 		return nil, err
@@ -110,7 +110,7 @@ func (a *auth) VerifyToken(tokenString string) (*jwt.Token, error) {
 }
 
 // Extract token metadata
-func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*accessDetails, error) {
+func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*AccessDetails, error) {
 	var err error
 
 	claims, ok := token.Claims.(jwt.MapClaims)
@@ -123,9 +123,9 @@ func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*accessDetails, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &accessDetails{
-			uuid:   accessUUID,
-			userID: userID,
+		return &AccessDetails{
+			UUID:   accessUUID,
+			UserID: userID,
 		}, nil
 	}
 	return nil, err
@@ -134,6 +134,26 @@ func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*accessDetails, error) {
 // Refresh token data
 func (a *auth) Refresh(refreshToken string) error {
 	return nil
+}
+
+// GetTokenExpire get encapsulated token data (expire access data)
+func (t *Token) GetTokenExpire() int64 {
+	return t.expireAccess
+}
+
+// GetTokenRefreshExpire get encapsulated token data (expire refresh data)
+func (t *Token) GetTokenRefreshExpire() int64 {
+	return t.expireRefresh
+}
+
+// GetUUIDAccess get encapsulated token data (user UUID access)
+func (t *Token) GetUUIDAccess() string {
+	return t.uuidAccess
+}
+
+// GetUUIDRefresh get encapsulated token data (user UUID refresh)
+func (t *Token) GetUUIDRefresh() string {
+	return t.uuidRefresh
 }
 
 // GetToken get encapsulated token data

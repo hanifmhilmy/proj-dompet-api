@@ -8,6 +8,13 @@
     
 [Redis]
     main = "127.0.0.1:6379"
+    
+[RedisOptions]
+    MaxIdle         = 1
+    MaxActive       = 1
+    Timeout         = 200
+    IdlePingPeriod  = 200
+    PoolWaitMs      = 200
 
 [Token]
     access-exp = 15
