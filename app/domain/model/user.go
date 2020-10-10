@@ -32,10 +32,10 @@ type (
 
 	// SignUpDetails exposed signup model struct
 	SignUpDetails struct {
-		Email    string `db:"email" json:"email"`
-		Name     string `db:"name" json:"name"`
-		Username string `db:"username" json:"username"`
-		Password string `db:"password" json:"password"`
+		Email    string `db:"email" json:"email" validate:"required,email,max=100"`
+		Name     string `db:"name" json:"name" validate:"min=4,max=100"`
+		Username string `db:"username" json:"username" validate:"required,email,max=100"`
+		Password string `db:"password" json:"password" validate:"required,min=6,max=20"`
 	}
 
 	// AccessDetails detail of extracted token data

@@ -1,8 +1,6 @@
 package services
 
 import (
-	"database/sql"
-
 	"github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
@@ -37,7 +35,7 @@ func (u *userService) SaveCreatedUser(data model.SignUpDetails) error {
 		return err
 	}
 	userID, err := u.repo.FindAccount(data.Username, data.Password)
-	if err != nil && errors.Cause(err) != sql.ErrNoRows {
+	if err != nil {
 		err = errors.Wrap(err, "[UserService] query failed: ")
 		return err
 	}

@@ -7,6 +7,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-gcfg/gcfg v1.2.3
+	github.com/go-playground/validator/v10 v10.4.0
 	github.com/golang/mock v1.4.4
 	github.com/gomodule/redigo v1.8.2
 	github.com/jmoiron/sqlx v1.2.0

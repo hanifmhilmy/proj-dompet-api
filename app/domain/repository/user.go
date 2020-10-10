@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"log"
+	"database/sql"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -44,8 +44,8 @@ func (r *userRepository) FindAccount(uname, password string) (int64, error) {
 	q := "select user_id from account where status=1 and username=$1 and password=$2"
 	q = r.db.Rebind(q)
 	err := r.db.QueryRowx(q, uname, password).Scan(&userID)
-	if err != nil {
-		log.Println("[UserRepository DB] Fail when lookup account, err -> ", err)
+	if err != nil && errors.Cause(err) != sql.ErrNoRows {
+		err = errors.Wrap(err, "[UserRepository DB] Fail when lookup account, err -> ")
 		return userID, err
 	}
 
@@ -56,8 +56,8 @@ func (r *userRepository) FindAccountDetail(userID int64) (*model.Account, error)
 	var ac model.AccountData
 
 	err := r.db.Select(&ac, "select user_id, name, email, create_time, create_by, update_time, update_by from account_detail where user_id=?", userID)
-	if err != nil {
-		log.Println("[UserRepository DB] Fail when lookup account detail, err -> ", err)
+	if err != nil && errors.Cause(err) != sql.ErrNoRows {
+		err = errors.Wrap(err, "[UserRepository DB] Fail when lookup account detail, err -> ")
 		return nil, err
 	}
 
@@ -71,7 +71,7 @@ func (r *userRepository) SaveAccount(tx database.Tx, user, password string) (uid
 	currentTime := time.Now().Format(time.RFC3339Nano)
 	err = tx.QueryRowx(q, user, password, model.UserStatusActive, currentTime, model.UserActionBySystem, currentTime, model.UserActionBySystem).Scan(&uid)
 	if err != nil {
-		log.Println("[UserRepository DB] Fail to save account data")
+		err = errors.Wrap(err, "[UserRepository DB] Fail to save account data")
 		return
 	}
 	return uid, nil
@@ -84,7 +84,7 @@ func (r *userRepository) SaveDetail(tx database.Tx, userID int64, name, email st
 	currentTime := time.Now().Format(time.RFC3339Nano)
 	_, err := tx.Exec(q, userID, name, email, currentTime, model.UserActionBySystem, currentTime, model.UserActionBySystem)
 	if err != nil {
-		log.Println("[UserRepository DB] Fail to save account data")
+		err = errors.Wrap(err, "[UserRepository DB] Fail to save account data")
 		return err
 	}
 	return nil
@@ -94,7 +94,7 @@ func (r *userRepository) SaveDetail(tx database.Tx, userID int64, name, email st
 func (r *userRepository) GetAccessDetails(userUUID string) error {
 	_, err := r.redis.Do("GET", userUUID)
 	if err != nil {
-		log.Println("[UserRepository Redis] Empty Redis ", err)
+		err = errors.Wrap(err, "[UserRepository Redis] Empty Redis ")
 		return err
 	}
 	return nil
