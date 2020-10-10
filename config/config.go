@@ -42,11 +42,19 @@ func InitConfig() (cnf Config, err error) {
 	err = godotenv.Load("config/files/app.env")
 	if err != nil {
 		log.Println("Fail to read env file")
+		err = godotenv.Load("/etc/proj-dompet/files/app.env")
+		if err != nil {
+			log.Println("Fail to read env file")
+		}
 	}
 
 	err = gcfg.ReadFileInto(&cnf, "config/files/dompet.main.ini")
 	if err != nil {
 		log.Println("Fail to read config file")
+		err = gcfg.ReadFileInto(&cnf, "/etc/proj-dompet/files/dompet.main.ini")
+		if err != nil {
+			log.Println("Fail to read config file")
+		}
 	}
 
 	return
