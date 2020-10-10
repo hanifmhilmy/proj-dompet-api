@@ -83,7 +83,8 @@ func registerHTTPRoute(r *httprouter.Router, ctn registry.DIContainer) {
 	}
 
 	r.HandlerFunc("GET", "/ping", chainMiddleware(handler.Ping, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
-	r.HandlerFunc("GET", "/auth", chainMiddleware(handler.VerifyAuth, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions, middlewares.Authorization))
 	r.HandlerFunc("POST", "/auth", chainMiddleware(handler.Authorization, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
+	r.HandlerFunc("PATCH", "/auth", chainMiddleware(handler.Logout, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions, middlewares.IsAuthorized))
+	r.HandlerFunc("GET", "/auth", chainMiddleware(handler.Verify, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions, middlewares.RefreshToken))
 	r.HandlerFunc("POST", "/register", chainMiddleware(handler.Register, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
 }

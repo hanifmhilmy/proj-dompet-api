@@ -9,10 +9,6 @@ import (
 
 var whitelistedOrigin map[string]bool
 
-const (
-	projDompet = "proj-dompet"
-)
-
 func init() {
 	whitelistedOrigin = make(map[string]bool)
 	whitelistedOrigin[projDompet] = true

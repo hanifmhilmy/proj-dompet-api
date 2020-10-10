@@ -18,7 +18,7 @@ const (
 // DBConnInterface wrapper database connection struct
 type DBConnInterface interface {
 	Connect(names []string)
-	GetDB(name string) (*sqlx.DB, error)
+	GetDB(name string) (Client, error)
 }
 
 type (
@@ -93,12 +93,11 @@ func (db *DBConfig) Connect(names []string) {
 }
 
 // GetDB get database connection
-func (db *DBConfig) GetDB(name string) (sqlx *sqlx.DB, err error) {
+func (db *DBConfig) GetDB(name string) (client Client, err error) {
 	conn, ok := db.Conn.conn[name]
 	if !ok {
 		err = errors.New("map nil")
 		log.Printf("[Database] %v, reason: No DB connection with name: %s found!\n", name, err)
 	}
-	sqlx = conn.Master
-	return sqlx, nil
+	return NewClient(conn.Master), nil
 }

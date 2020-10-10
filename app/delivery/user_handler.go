@@ -60,23 +60,33 @@ func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
 	helpers.JSONResponse(w, http.StatusOK, model.SignUpSuccess)
 }
 
-func (h Handler) VerifyAuth(w http.ResponseWriter, r *http.Request) {
+func (h Handler) Verify(w http.ResponseWriter, r *http.Request) {
 	// Set the timeout
 	ctx, cancel := context.WithTimeout(r.Context(), time.Millisecond*500)
 	defer cancel()
 
 	u := h.di.Resolve(registry.UserUsecase).(usecase.UserUsecaseInterface)
-	tokenString, ok := helpers.GetTokenContext(ctx)
-	if !ok || tokenString == "" {
-		helpers.JSONResponse(w, http.StatusUnauthorized, model.UserUnauthorized)
-		return
-	}
-	userID, err := u.IsAuthorized(ctx, tokenString)
-	if err != nil || userID == model.UserNotFound {
+	token, err := u.VerifyRefreshToken(ctx)
+	if err != nil {
 		log.Println(err)
 		helpers.JSONResponse(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
-	helpers.JSONResponse(w, http.StatusOK, model.LoggedInSuccess)
+	helpers.JSONResponse(w, http.StatusOK, token)
+}
+
+func (h Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	// Set the timeout
+	ctx, cancel := context.WithTimeout(r.Context(), time.Millisecond*500)
+	defer cancel()
+
+	u := h.di.Resolve(registry.UserUsecase).(usecase.UserUsecaseInterface)
+	if err := u.Logout(ctx); err != nil {
+		log.Println(err)
+		helpers.JSONResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	helpers.JSONResponse(w, http.StatusOK, model.LoggedOutSuccess)
 }

@@ -1,29 +1,28 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/twinj/uuid"
 )
 
 type (
 	AuthInterface interface {
 		CreateToken(uid int64) (token *Token, err error)
-		VerifyToken(tokenString string) (*jwt.Token, error)
-		ExtractTokenMetadata(token *jwt.Token) (*AccessDetails, error)
 	}
 
 	auth struct {
-		as  string
-		rs  string
 		opt Options
 	}
 
-	AccessDetails struct {
+	TokenDetails struct {
 		UUID   string
 		UserID int64
 	}
@@ -44,17 +43,36 @@ type (
 )
 
 const (
-	prefix = "[Auth Package]"
+	prefix       = "[Auth Package]"
+	RefreshToken = "Refresh Token"
+	AccessToken  = "Access Token"
+
+	ClaimUUIDAccess  = "access_uuid"
+	ClaimUUIDRefresh = "refresh_uuid"
 )
 
-func NewAuth(accessSecret, refreshSecret string, opt Options) AuthInterface {
+var (
+	// ErrMalformedToken error return for invalid token set
+	ErrMalformedToken = errors.New("Malformed Token Set")
+	// ErrInvalidToken error return for failing verify the token
+	ErrInvalidToken = errors.New("Invalid Token Set")
+	// ErrExtractTokenMetadata error return for failing extract the token data
+	ErrExtractTokenMetadata = errors.New("Fail to extract the token data")
+	// ErrUserInvalid error returned if the userID is equal to 0 or not being set
+	ErrUserInvalid = errors.New("Forbidden")
+
+	secret        = os.Getenv(config.SecretConst)
+	secretRefresh = os.Getenv(config.SecretRefreshConst)
+)
+
+// NewAuth initialize auth with custom options
+func NewAuth(opt Options) AuthInterface {
 	return &auth{
-		as:  accessSecret,
-		rs:  refreshSecret,
 		opt: opt,
 	}
 }
 
+// CreateToken creating the token for the logged in user
 func (a *auth) CreateToken(uid int64) (token *Token, err error) {
 	uidAccess := uuid.NewV4().String()
 	token = &Token{
@@ -70,7 +88,7 @@ func (a *auth) CreateToken(uid int64) (token *Token, err error) {
 		"exp":         token.expireAccess,
 	}
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
-	token.accessToken, err = at.SignedString([]byte(a.as))
+	token.accessToken, err = at.SignedString([]byte(secret))
 	if err != nil {
 		log.Println(prefix, "Fail at creating access token, err -> ", err)
 		return nil, err
@@ -82,7 +100,7 @@ func (a *auth) CreateToken(uid int64) (token *Token, err error) {
 		"exp":          token.expireRefresh,
 	}
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
-	token.refreshToken, err = rt.SignedString([]byte(a.rs))
+	token.refreshToken, err = rt.SignedString([]byte(secretRefresh))
 	if err != nil {
 		log.Println(prefix, "Fail at creating refresh token, err -> ", err)
 		return nil, err
@@ -91,14 +109,19 @@ func (a *auth) CreateToken(uid int64) (token *Token, err error) {
 	return token, nil
 }
 
-// Parse, validate, and return a token.
+// VerifyToken Parse, validate, and return a token.
 // keyFunc will receive the parsed token and should return the key for validating.
-func (a *auth) VerifyToken(tokenString string) (*jwt.Token, error) {
+func VerifyToken(tokenString string, tokenType string) (*jwt.Token, error) {
+	tType := secret
+	if tokenType == RefreshToken {
+		tType = secretRefresh
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(a.as), nil
+		return []byte(tType), nil
 	})
 	if err != nil {
 		return nil, err
@@ -110,12 +133,12 @@ func (a *auth) VerifyToken(tokenString string) (*jwt.Token, error) {
 }
 
 // Extract token metadata
-func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*AccessDetails, error) {
+func ExtractTokenMetadata(token *jwt.Token, uuidClaimType string) (*TokenDetails, error) {
 	var err error
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		accessUUID, ok := claims["access_uuid"].(string)
+		uuidClaim, ok := claims[uuidClaimType].(string)
 		if !ok {
 			return nil, err
 		}
@@ -123,17 +146,12 @@ func (a *auth) ExtractTokenMetadata(token *jwt.Token) (*AccessDetails, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &AccessDetails{
-			UUID:   accessUUID,
+		return &TokenDetails{
+			UUID:   uuidClaim,
 			UserID: userID,
 		}, nil
 	}
 	return nil, err
-}
-
-// Refresh token data
-func (a *auth) Refresh(refreshToken string) error {
-	return nil
 }
 
 // GetTokenExpire get encapsulated token data (expire access data)

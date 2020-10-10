@@ -6,7 +6,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
-	"github.com/jmoiron/sqlx"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
 	"github.com/pkg/errors"
 )
 
@@ -16,13 +16,13 @@ type (
 	}
 
 	userService struct {
-		clientDB    *sqlx.DB
+		clientDB    database.Client
 		clientRedis redis.Conn
 		repo        repository.UserRepositoryInterface
 	}
 )
 
-func NewUserService(r repository.UserRepositoryInterface, db *sqlx.DB, redis redis.Conn) UserServiceInterface {
+func NewUserService(r repository.UserRepositoryInterface, db database.Client, redis redis.Conn) UserServiceInterface {
 	return &userService{
 		clientDB:    db,
 		clientRedis: redis,

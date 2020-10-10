@@ -56,6 +56,7 @@ const (
 	UserNotFound = 0
 
 	LoggedInSuccess  = "Success login"
+	LoggedOutSuccess = "Success logout"
 	SignUpSuccess    = "User Created!"
 	UserUnauthorized = "Unauthorized"
 )

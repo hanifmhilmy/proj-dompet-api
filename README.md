@@ -17,19 +17,16 @@ I love the architecture design, thank to share the design @hatajoe, hopefully I 
 - Create a new branch from `main` branch, i.e.
     > n.b. please follow this naming format:
     >
-    > feat_<your_feature_name> for new feature implementation
+    > feat/<your_feature_name> for new feature implementation
     >
-    > bugf_<your_bugfix_name> for creating a bugfix
+    > bugf/<your_bugfix_name> for creating a bugfix
     >
-    > improve_<your_improvement_name> for improving 
+    > improve/<your_improvement_name> for improving 
+    >
+    > test/<your_test_for> for improving the code unittest coverage
 
     ```
-    git checkout -b feat:add_support_create_multiple_records
-    ```
-- Use commit message that represent your changes, don't put random commit message. i.e.
-    ```
-    adding new function CreateMultiRecords in the Budget Usecase -> Allowed
-    asdasdasd -> Not allowed
+    ex. git checkout -b feat/add_support_create_multiple_records
     ```
 - After you're done with your development, please create the PR to `main` branch
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
-	"github.com/jmoiron/sqlx"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
 	"github.com/pkg/errors"
 )
 
@@ -14,19 +14,20 @@ type (
 	UserRepositoryInterface interface {
 		FindAccount(uname, password string) (int64, error)
 		FindAccountDetail(userID int64) (*model.Account, error)
-		SaveAccount(tx *sqlx.Tx, user, password string) (int64, error)
-		SaveDetail(tx *sqlx.Tx, userID int64, name, email string) error
+		SaveAccount(tx database.Tx, user, password string) (int64, error)
+		SaveDetail(tx database.Tx, userID int64, name, email string) error
 		GetAccessDetails(userUUID string) error
 		SetAccessDetails(details model.AccessDetails, expireAccess, expireRefresh int64) error
+		RemoveTokenCache(uuid string) error
 	}
 
 	userRepository struct {
-		db    *sqlx.DB
+		db    database.Client
 		redis redis.Conn
 	}
 
 	Client struct {
-		DB    *sqlx.DB
+		DB    database.Client
 		Redis redis.Conn
 	}
 )
@@ -42,7 +43,7 @@ func (r *userRepository) FindAccount(uname, password string) (int64, error) {
 	var userID int64
 	q := "select user_id from account where status=1 and username=$1 and password=$2"
 	q = r.db.Rebind(q)
-	err := r.db.QueryRow(q, uname, password).Scan(&userID)
+	err := r.db.QueryRowx(q, uname, password).Scan(&userID)
 	if err != nil {
 		log.Println("[UserRepository DB] Fail when lookup account, err -> ", err)
 		return userID, err
@@ -63,12 +64,12 @@ func (r *userRepository) FindAccountDetail(userID int64) (*model.Account, error)
 	return model.NewUser(ac), nil
 }
 
-func (r *userRepository) SaveAccount(tx *sqlx.Tx, user, password string) (uid int64, err error) {
+func (r *userRepository) SaveAccount(tx database.Tx, user, password string) (uid int64, err error) {
 	// TODO: change status active to pending after implement verification
 	q := "insert into account (username, password, status, create_time, create_by, update_time, update_by) values ($1, $2, $3, $4, $5, $6, $7) returning user_id"
 	q = tx.Rebind(q)
 	currentTime := time.Now().Format(time.RFC3339Nano)
-	err = tx.QueryRow(q, user, password, model.UserStatusActive, currentTime, model.UserActionBySystem, currentTime, model.UserActionBySystem).Scan(&uid)
+	err = tx.QueryRowx(q, user, password, model.UserStatusActive, currentTime, model.UserActionBySystem, currentTime, model.UserActionBySystem).Scan(&uid)
 	if err != nil {
 		log.Println("[UserRepository DB] Fail to save account data")
 		return
@@ -76,7 +77,7 @@ func (r *userRepository) SaveAccount(tx *sqlx.Tx, user, password string) (uid in
 	return uid, nil
 }
 
-func (r *userRepository) SaveDetail(tx *sqlx.Tx, userID int64, name, email string) error {
+func (r *userRepository) SaveDetail(tx database.Tx, userID int64, name, email string) error {
 	// TODO: change status active to pending after implement verification
 	q := "insert into account_detail (user_id, name, email, create_time, create_by, update_time, update_by) values ($1, $2, $3, $4, $5, $6, $7)"
 	q = tx.Rebind(q)
@@ -122,6 +123,22 @@ func (r *userRepository) SetAccessDetails(details model.AccessDetails, expireAcc
 	if err != nil {
 		err = errors.Wrap(err, "[UserRepository Redis] Fail Set Expire Refresh Key")
 		return err
+	}
+
+	return nil
+}
+
+// RemoveRefreshToken remove old refresh access token
+func (r *userRepository) RemoveTokenCache(uuid string) error {
+	// Delete Refresh Token Cache
+	result, err := r.redis.Do("DEL", uuid)
+	if err != nil {
+		err = errors.Wrap(err, "[UserRepository Redis] Fail Delete Refresh Key")
+		return err
+	}
+
+	if result.(int64) == 0 {
+		return errors.New("No Key Found")
 	}
 
 	return nil

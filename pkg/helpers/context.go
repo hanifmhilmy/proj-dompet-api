@@ -9,8 +9,9 @@ type (
 )
 
 const (
-	ContextKeyToken = Key("token_context")
-	ContextKeyAuth  = Key("auth_userID")
+	ContextKeyToken    = Key("token_context")
+	ContextKeyAuth     = Key("auth_userID")
+	ContextKeyAuthUUID = Key("auth_userUUID")
 )
 
 // SetTokenContext set the token string data to the context
@@ -49,8 +50,29 @@ func GetUserIDContext(ctx context.Context) (userID int64, ok bool) {
 	if ctx == nil {
 		return
 	}
-	if val := ctx.Value(ContextKeyToken); val != nil {
+	if val := ctx.Value(ContextKeyAuth); val != nil {
 		userID, ok = val.(int64)
+	}
+	return
+}
+
+// SetUserUUIDContext set the userID data to the context
+func SetUserUUIDContext(parent context.Context, value string) context.Context {
+	if parent == nil {
+		parent = context.Background()
+	}
+
+	parent = context.WithValue(parent, ContextKeyAuthUUID, value)
+	return parent
+}
+
+// GetUserUUIDContext get the userID data from the context
+func GetUserUUIDContext(ctx context.Context) (UUID string, ok bool) {
+	if ctx == nil {
+		return
+	}
+	if val := ctx.Value(ContextKeyAuthUUID); val != nil {
+		UUID, ok = val.(string)
 	}
 	return
 }

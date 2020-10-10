@@ -3,7 +3,6 @@ package registry
 import (
 	"log"
 	"net/http"
-	"os"
 
 	redigo "github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
@@ -13,7 +12,6 @@ import (
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/auth"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
-	"github.com/jmoiron/sqlx"
 	"github.com/sarulabs/di"
 )
 
@@ -43,6 +41,11 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		return nil, err
 	}
 
+	auth := auth.NewAuth(auth.Options{
+		AccessExpire:  conf.Token.AccessExpire,
+		RefreshExpire: conf.Token.RefreshExpire,
+	})
+
 	db := database.NewDB(conf)
 	rdg := redis.New(conf)
 	db.Connect([]string{database.DBMain})
@@ -62,15 +65,11 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		{
 			Name: UserUsecase,
 			Build: func(ctn di.Container) (interface{}, error) {
-				dbClient := ctn.Get(PostgreMainDB).(*sqlx.DB)
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
 				redisClient := ctn.Get(RedigoClient).(redigo.Conn)
 				repo := repository.NewUserRepo(repository.Client{
 					DB:    dbClient,
 					Redis: redisClient,
-				})
-				auth := auth.NewAuth(os.Getenv(config.SecretConst), os.Getenv(config.SecretRefreshConst), auth.Options{
-					AccessExpire:  conf.Token.AccessExpire,
-					RefreshExpire: conf.Token.RefreshExpire,
 				})
 				return usecase.NewUserUsecase(repo, services.NewUserService(repo, dbClient, redisClient), auth), nil
 			},
@@ -84,7 +83,7 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 	}, nil
 }
 
-// HTTPMiddleware register htt pmiddleware function
+// HTTPMiddleware register http middleware function
 func (c *Container) HTTPMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return di.HTTPMiddleware(h, c.ctn, func(msg string) {
 		log.Println("Captured: ", msg)

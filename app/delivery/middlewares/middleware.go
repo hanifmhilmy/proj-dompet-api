@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/auth"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/helpers"
 )
 
@@ -40,20 +41,75 @@ func PanicRecoveryMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Authorization middleware to check verify the cookie and pass the value to context
-func Authorization(h http.HandlerFunc) http.HandlerFunc {
+// IsAuthorized middleware to verify the authorization
+func IsAuthorized(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: check the cookie value and then pass the value to context
+		ctx := r.Context()
 		bearToken := r.Header.Get("Authorization")
 		strArr := strings.Split(bearToken, " ")
 
-		authVal := ""
-		if len(strArr) == 2 {
-			authVal = strArr[1]
+		if len(strArr) != 2 {
+			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrMalformedToken.Error())
+			return
 		}
 
+		jwtToken, err := auth.VerifyToken(strArr[1], auth.AccessToken)
+		if err != nil {
+			helpers.JSONResponse(w, http.StatusUnauthorized, auth.ErrInvalidToken.Error())
+			return
+		}
+
+		if jwtToken == nil || (jwtToken != nil && !jwtToken.Valid) {
+			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrInvalidToken.Error())
+			return
+		}
+
+		detail, err := auth.ExtractTokenMetadata(jwtToken, auth.ClaimUUIDAccess)
+		if err != nil || detail == nil {
+			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrExtractTokenMetadata.Error())
+			return
+		}
+
+		ctx = helpers.SetTokenContext(ctx, strArr[1])
+		ctx = helpers.SetUserIDContext(ctx, detail.UserID)
+		ctx = helpers.SetUserUUIDContext(ctx, detail.UUID)
+
+		r = r.WithContext(ctx)
+		h(w, r)
+	}
+}
+
+// RefreshToken middleware to verify the refresh token in the cookie
+func RefreshToken(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		ctx = helpers.SetTokenContext(ctx, authVal)
+		cookie, err := r.Cookie("_RID_Pundi_")
+		if err == http.ErrNoCookie {
+			log.Println(cookie)
+			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrMalformedToken.Error())
+			return
+		}
+
+		jwtToken, err := auth.VerifyToken(cookie.Value, auth.RefreshToken)
+		if err != nil {
+			helpers.JSONResponse(w, http.StatusUnauthorized, auth.ErrInvalidToken.Error())
+			return
+		}
+
+		if jwtToken == nil || (jwtToken != nil && !jwtToken.Valid) {
+			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrInvalidToken.Error())
+			return
+		}
+
+		detail, err := auth.ExtractTokenMetadata(jwtToken, auth.ClaimUUIDRefresh)
+		if err != nil || detail == nil {
+			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrExtractTokenMetadata.Error())
+			return
+		}
+
+		ctx = helpers.SetTokenContext(ctx, cookie.Value)
+		ctx = helpers.SetUserIDContext(ctx, detail.UserID)
+		ctx = helpers.SetUserUUIDContext(ctx, detail.UUID)
 
 		r = r.WithContext(ctx)
 		h(w, r)
