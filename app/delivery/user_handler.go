@@ -26,8 +26,9 @@ func (h Handler) Authorization(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if login.Username == "" || login.Password == "" {
-		helpers.JSONResponse(w, http.StatusBadRequest, helpers.ErrValidator)
+	isValid, err := helpers.Validate(login)
+	if err != nil && !isValid {
+		helpers.JSONResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

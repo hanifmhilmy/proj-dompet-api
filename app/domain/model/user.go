@@ -26,8 +26,8 @@ type (
 
 	// LoginDetails exposed login detail struct
 	LoginDetails struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username string `json:"username" validate:"required,email,max=100"`
+		Password string `json:"password" validate:"required,min=6,max=20"`
 	}
 
 	// SignUpDetails exposed signup model struct
