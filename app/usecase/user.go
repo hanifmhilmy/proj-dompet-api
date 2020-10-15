@@ -147,3 +147,7 @@ func (u userUsecase) Logout(ctx context.Context) (err error) {
 
 	return nil
 }
+
+func (u userUsecase) GeneratePasswordReset(ctx context.Context) error {
+	return nil
+}

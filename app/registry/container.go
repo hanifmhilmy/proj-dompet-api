@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	redigo "github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/services"
 	"github.com/hanifmhilmy/proj-dompet-api/app/usecase"
@@ -59,14 +58,14 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		{
 			Name: RedigoClient,
 			Build: func(ctn di.Container) (interface{}, error) {
-				return rdg.GetConn()
+				return rdg.Ping()
 			},
 		},
 		{
 			Name: UserUsecase,
 			Build: func(ctn di.Container) (interface{}, error) {
 				dbClient := ctn.Get(PostgreMainDB).(database.Client)
-				redisClient := ctn.Get(RedigoClient).(redigo.Conn)
+				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
 				repo := repository.NewUserRepo(repository.Client{
 					DB:    dbClient,
 					Redis: redisClient,

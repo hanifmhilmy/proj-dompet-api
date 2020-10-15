@@ -50,10 +50,10 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) FindAccount(uname, password i
 }
 
 // FindAccountDetail mocks base method
-func (m *MockUserRepositoryInterface) FindAccountDetail(userID int64) (*model.Account, error) {
+func (m *MockUserRepositoryInterface) FindAccountDetail(userID int64) (*model.AccountData, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindAccountDetail", userID)
-	ret0, _ := ret[0].(*model.Account)
+	ret0, _ := ret[0].(*model.AccountData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
