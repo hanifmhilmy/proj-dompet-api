@@ -26,6 +26,12 @@ func (h Handler) Authorization(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isValid, err := helpers.Validate(login)
+	if err != nil && !isValid {
+		helpers.JSONResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	token, err := u.Authorization(ctx, login.Username, login.Password)
 	if err != nil {
 		log.Println(err)
@@ -45,6 +51,12 @@ func (h Handler) Register(w http.ResponseWriter, r *http.Request) {
 	err := helpers.ReadJSONBody(r, &signup)
 	if err != nil {
 		log.Println(err)
+		helpers.JSONResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	isValid, err := helpers.Validate(signup)
+	if err != nil && !isValid {
 		helpers.JSONResponse(w, http.StatusBadRequest, err.Error())
 		return
 	}
