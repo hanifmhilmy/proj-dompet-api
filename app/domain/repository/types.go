@@ -11,7 +11,7 @@ import (
 type (
 	// CategoryRepositoryInterface interface wrapper for struct category repo
 	CategoryRepositoryInterface interface {
-		GetCategoryList(parentID int64) (data []model.CategoryData, err error)
+		GetCategoryList(tx database.Tx, parentID int64) (data []model.CategoryData, err error)
 	}
 
 	// UserRepositoryInterface interface wrapper for struct user repo
