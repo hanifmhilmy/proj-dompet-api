@@ -1,34 +1,20 @@
 package repository
 
 import (
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
 	"github.com/pkg/errors"
 )
 
 type (
-	UserRepositoryInterface interface {
-		FindAccount(uname, password string) (int64, error)
-		FindAccountDetail(userID int64) (*model.Account, error)
-		SaveAccount(tx database.Tx, user, password string) (int64, error)
-		SaveDetail(tx database.Tx, userID int64, name, email string) error
-		GetAccessDetails(userUUID string) error
-		SetAccessDetails(details model.AccessDetails, expireAccess, expireRefresh int64) error
-		RemoveTokenCache(uuid string) error
-	}
-
 	userRepository struct {
 		db    database.Client
-		redis redis.Conn
-	}
-
-	Client struct {
-		DB    database.Client
-		Redis redis.Conn
+		redis *redis.Redigo
 	}
 )
 
@@ -52,7 +38,7 @@ func (r *userRepository) FindAccount(uname, password string) (int64, error) {
 	return userID, nil
 }
 
-func (r *userRepository) FindAccountDetail(userID int64) (*model.Account, error) {
+func (r *userRepository) FindAccountDetail(userID int64) (*model.AccountData, error) {
 	var ac model.AccountData
 
 	err := r.db.Select(&ac, "select user_id, name, email, create_time, create_by, update_time, update_by from account_detail where user_id=?", userID)
@@ -61,7 +47,7 @@ func (r *userRepository) FindAccountDetail(userID int64) (*model.Account, error)
 		return nil, err
 	}
 
-	return model.NewUser(ac), nil
+	return &ac, nil
 }
 
 func (r *userRepository) SaveAccount(tx database.Tx, user, password string) (uid int64, err error) {
@@ -128,17 +114,60 @@ func (r *userRepository) SetAccessDetails(details model.AccessDetails, expireAcc
 	return nil
 }
 
-// RemoveRefreshToken remove old refresh access token
+// RemoveRefreshToken remove expiry token
 func (r *userRepository) RemoveTokenCache(uuid string) error {
 	// Delete Refresh Token Cache
 	result, err := r.redis.Do("DEL", uuid)
 	if err != nil {
-		err = errors.Wrap(err, "[UserRepository Redis] Fail Delete Refresh Key")
+		err = errors.Wrap(err, "[UserRepository Redis] Fail to delete token key")
 		return err
 	}
 
 	if result.(int64) == 0 {
-		return errors.New("No Key Found")
+		return ErrKeyNotFound
+	}
+
+	return nil
+}
+
+// SetPasswordResetTokenCache set the redis password reset token
+func (r *userRepository) SetPasswordResetTokenCache(uid int64, value string) error {
+	key := fmt.Sprintf(model.RedisResetPassKey, uid)
+	_, err := r.redis.Do("SET", key, value)
+	if err != nil {
+		err = errors.Wrap(err, "[UserRepository Redis] Fail set reset pass token")
+		return err
+	}
+
+	_, err = r.redis.Do("EXPIRE", key, 300)
+	if err != nil {
+		err = errors.Wrap(err, "[UserRepository Redis] Fail set expire reset pass token")
+		return err
+	}
+
+	return nil
+}
+
+// GetPasswordResetTokenCache get the password reset token cache
+func (r *userRepository) GetPasswordResetTokenCache(uid int64) (string, error) {
+	s, err := r.redis.GetString(fmt.Sprintf(model.RedisResetPassKey, uid))
+	if err != nil {
+		err = errors.Wrap(err, "[UserRepository Redis] Fail retrieve reset token")
+		return s, err
+	}
+	return s, nil
+}
+
+// RemovePasswordResetTokenCache get the password reset token cache
+func (r *userRepository) RemovePasswordResetTokenCache(uid int64) error {
+	rs, err := r.redis.Do(fmt.Sprintf(model.RedisResetPassKey, uid))
+	if err != nil {
+		err = errors.Wrap(err, "[UserRepository Redis] Fail remove reset token")
+		return err
+	}
+
+	if rs.(int64) == 0 {
+		return ErrKeyNotFound
 	}
 
 	return nil

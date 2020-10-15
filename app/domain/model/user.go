@@ -3,16 +3,6 @@ package model
 import "time"
 
 type (
-	Account struct {
-		id          int64
-		email       string
-		name        string
-		createdTime time.Time
-		createdBy   int64
-		updateTime  time.Time
-		updateBy    int64
-	}
-
 	// AccountData exposed account data struct
 	AccountData struct {
 		ID          int64     `db:"user_id" json:"id"`
@@ -59,22 +49,6 @@ const (
 	LoggedOutSuccess = "Success logout"
 	SignUpSuccess    = "User Created!"
 	UserUnauthorized = "Unauthorized"
+
+	RedisResetPassKey = "pwd:t_%d"
 )
-
-// NewUser create new user account data
-func NewUser(ac AccountData) *Account {
-	return &Account{
-		id:          ac.ID,
-		email:       ac.Email,
-		name:        ac.Name,
-		createdTime: ac.CreatedTime,
-		createdBy:   ac.CreatedBy,
-		updateTime:  ac.UpdateTime,
-		updateBy:    ac.UpdateBy,
-	}
-}
-
-// GetIdentifier get account user id
-func (a *Account) GetIdentifier() int64 {
-	return a.id
-}

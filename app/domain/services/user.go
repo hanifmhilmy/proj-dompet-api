@@ -3,10 +3,10 @@ package services
 import (
 	"database/sql"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
+	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
 	"github.com/pkg/errors"
 )
 
@@ -17,12 +17,12 @@ type (
 
 	userService struct {
 		clientDB    database.Client
-		clientRedis redis.Conn
+		clientRedis *redis.Redigo
 		repo        repository.UserRepositoryInterface
 	}
 )
 
-func NewUserService(r repository.UserRepositoryInterface, db database.Client, redis redis.Conn) UserServiceInterface {
+func NewUserService(r repository.UserRepositoryInterface, db database.Client, redis *redis.Redigo) UserServiceInterface {
 	return &userService{
 		clientDB:    db,
 		clientRedis: redis,

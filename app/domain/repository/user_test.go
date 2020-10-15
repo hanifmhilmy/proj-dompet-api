@@ -108,9 +108,9 @@ func Test_userRepository_FindAccount(t *testing.T) {
 func Test_userRepository_FindAccountDetail(t *testing.T) {
 	q := `select user_id, name, email, create_time, create_by, update_time, update_by from account_detail where user_id=?`
 	mockErr := errors.New("err")
-	mockedAccountResult := model.NewUser(model.AccountData{
+	mockedAccountResult := model.AccountData{
 		ID: 1,
-	})
+	}
 	type args struct {
 		userID int64
 	}
@@ -118,7 +118,7 @@ func Test_userRepository_FindAccountDetail(t *testing.T) {
 		name    string
 		args    args
 		expect  func(arg args, mockClient *mockDB.MockClient)
-		want    *model.Account
+		want    *model.AccountData
 		wantErr bool
 	}{
 		{
@@ -165,7 +165,7 @@ func Test_userRepository_FindAccountDetail(t *testing.T) {
 					ID: 1,
 				}).Return(nil)
 			},
-			want:    mockedAccountResult,
+			want:    &mockedAccountResult,
 			wantErr: false,
 		},
 	}

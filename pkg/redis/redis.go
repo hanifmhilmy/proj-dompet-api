@@ -106,3 +106,11 @@ func (r *Redigo) GetConn() (redis.Conn, error) {
 func (r *Redigo) IsErrNil(err error) bool {
 	return err == redis.ErrNil
 }
+
+func (r *Redigo) GetString(key string) (string, error) {
+	conn, err := r.getConn()
+	if err != nil {
+		return "", err
+	}
+	return redis.String(conn.Do("GET", key))
+}
