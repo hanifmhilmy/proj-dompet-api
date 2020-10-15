@@ -9,11 +9,11 @@ I love how the apps work and wanna try to create the similar apps for learning p
 This repo use the architecture based on the medium article: https://medium.com/@hatajoe/clean-architecture-in-go-4030f11ec1b1. 
 I love the architecture design, thank to share the design @hatajoe, hopefully I could improve something in the architecture design.
 
-# App Feature
+### App Feature
 
 Will soon add more feature to this apps ~
 
-# FAQ
+### FAQ
 
 ```
 Q: Is it paid apps?
