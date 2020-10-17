@@ -28,9 +28,10 @@ type Container struct {
 
 const (
 	// PostgreMainDB container built for db main connection
-	PostgreMainDB = "postgres-db"
-	RedigoClient  = "redigo-client"
-	UserUsecase   = "user-usecase"
+	PostgreMainDB   = "postgres-db"
+	RedigoClient    = "redigo-client"
+	UserUsecase     = "user-usecase"
+	CategoryUsecase = "category-usecase"
 )
 
 // NewContainer is to init new app container
@@ -58,7 +59,10 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		{
 			Name: RedigoClient,
 			Build: func(ctn di.Container) (interface{}, error) {
-				return rdg.Ping()
+				if _, err := rdg.Ping(); err != nil {
+					return nil, err
+				}
+				return rdg, nil
 			},
 		},
 		{
@@ -71,6 +75,20 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 					Redis: redisClient,
 				})
 				return usecase.NewUserUsecase(repo, services.NewUserService(repo, dbClient, redisClient), auth), nil
+			},
+		},
+		{
+			Name: CategoryUsecase,
+			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
+
+				repoClient := repository.Client{
+					DB:    dbClient,
+					Redis: redisClient,
+				}
+				repo := repository.NewCategoryRepo(repoClient)
+				return usecase.NewUsecaseCategory(repo, services.NewCategoryService(repoClient, repo)), nil
 			},
 		},
 	}...); err != nil {

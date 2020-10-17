@@ -34,5 +34,5 @@ const (
 	StatusCategoryActive  = 1
 	StatusCategoryDeleted = -1
 
-	QueryCategoryList = `SELECT category_id, value, parent_id, create_time, create_by, update_time, update_by where status = 1 and parent_id = $1`
+	QueryCategoryList = `SELECT category_id, value, parent_id, create_time, create_by, update_time, update_by from category where status = 1 and parent_id = $1`
 )

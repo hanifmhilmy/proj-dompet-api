@@ -32,8 +32,8 @@ func (cr categoryRepository) GetCategoryList(tx database.Tx, parentID int64) (da
 
 	for rows.Next() {
 		cat := model.CategoryData{}
-		if errScan := rows.Scan(&cat); errScan != nil {
-			err = errors.Wrap(err, errScan.Error())
+		if errScan := rows.StructScan(&cat); errScan != nil {
+			err = errors.Wrap(errScan, "[CategoryRepository]")
 			return nil, err
 		}
 
