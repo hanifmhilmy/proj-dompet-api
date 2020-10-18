@@ -9,6 +9,10 @@ import (
 
 // interface declaration
 type (
+	// BalanceRepositoryInterface interface wrapper for struct balance repo
+	BalanceRepositoryInterface interface {
+	}
+
 	// CategoryRepositoryInterface interface wrapper for struct category repo
 	CategoryRepositoryInterface interface {
 		GetCategoryList(tx database.Tx, parentID int64) (data []model.CategoryData, err error)

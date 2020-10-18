@@ -18,6 +18,7 @@ type (
 	}
 )
 
+// NewUserRepo initialize user repository
 func NewUserRepo(c Client) UserRepositoryInterface {
 	return &userRepository{
 		db:    c.DB,
@@ -25,6 +26,7 @@ func NewUserRepo(c Client) UserRepositoryInterface {
 	}
 }
 
+// FindAccount to look up a user account in the database
 func (r *userRepository) FindAccount(uname, password string) (int64, error) {
 	var userID int64
 	q := "select user_id from account where status=1 and username=$1 and password=$2"
@@ -38,6 +40,7 @@ func (r *userRepository) FindAccount(uname, password string) (int64, error) {
 	return userID, nil
 }
 
+// FindAccountDetail to look up a user account details in the database
 func (r *userRepository) FindAccountDetail(userID int64) (*model.AccountData, error) {
 	var ac model.AccountData
 
@@ -50,6 +53,7 @@ func (r *userRepository) FindAccountDetail(userID int64) (*model.AccountData, er
 	return &ac, nil
 }
 
+// SaveAccount to save new user account to the database
 func (r *userRepository) SaveAccount(tx database.Tx, user, password string) (uid int64, err error) {
 	// TODO: change status active to pending after implement verification
 	q := "insert into account (username, password, status, create_time, create_by, update_time, update_by) values ($1, $2, $3, $4, $5, $6, $7) returning user_id"
@@ -63,6 +67,7 @@ func (r *userRepository) SaveAccount(tx database.Tx, user, password string) (uid
 	return uid, nil
 }
 
+// SaveAccount to save new user account details to the database
 func (r *userRepository) SaveDetail(tx database.Tx, userID int64, name, email string) error {
 	// TODO: change status active to pending after implement verification
 	q := "insert into account_detail (user_id, name, email, create_time, create_by, update_time, update_by) values ($1, $2, $3, $4, $5, $6, $7)"
