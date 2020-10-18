@@ -35,20 +35,3 @@ type (
 		UserID      int64
 	}
 )
-
-const (
-	UserStatusDeleted = 0
-	UserStatusActive  = 1
-	UserStatusPending = 2
-
-	UserActionBySystem = 0
-
-	UserNotFound = 0
-
-	LoggedInSuccess  = "Success login"
-	LoggedOutSuccess = "Success logout"
-	SignUpSuccess    = "User Created!"
-	UserUnauthorized = "Unauthorized"
-
-	RedisResetPassKey = "pwd:t_%d"
-)

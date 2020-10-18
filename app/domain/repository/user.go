@@ -59,7 +59,7 @@ func (r *userRepository) SaveAccount(tx database.Tx, user, password string) (uid
 	q := "insert into account (username, password, status, create_time, create_by, update_time, update_by) values ($1, $2, $3, $4, $5, $6, $7) returning user_id"
 	q = tx.Rebind(q)
 	currentTime := time.Now().Format(time.RFC3339Nano)
-	err = tx.QueryRowx(q, user, password, model.UserStatusActive, currentTime, model.UserActionBySystem, currentTime, model.UserActionBySystem).Scan(&uid)
+	err = tx.QueryRowx(q, user, password, model.UserStatusActive, currentTime, model.ActionBySystem, currentTime, model.ActionBySystem).Scan(&uid)
 	if err != nil {
 		err = errors.Wrap(err, "[UserRepository DB] Fail to save account data")
 		return
@@ -73,7 +73,7 @@ func (r *userRepository) SaveDetail(tx database.Tx, userID int64, name, email st
 	q := "insert into account_detail (user_id, name, email, create_time, create_by, update_time, update_by) values ($1, $2, $3, $4, $5, $6, $7)"
 	q = tx.Rebind(q)
 	currentTime := time.Now().Format(time.RFC3339Nano)
-	_, err := tx.Exec(q, userID, name, email, currentTime, model.UserActionBySystem, currentTime, model.UserActionBySystem)
+	_, err := tx.Exec(q, userID, name, email, currentTime, model.ActionBySystem, currentTime, model.ActionBySystem)
 	if err != nil {
 		err = errors.Wrap(err, "[UserRepository DB] Fail to save account data")
 		return err

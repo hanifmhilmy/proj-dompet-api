@@ -26,13 +26,3 @@ var (
 	ErrMissingCategory = errors.New("Category Not Found")
 	ErrInvalidCategory = errors.New("Invalid Category")
 )
-
-const (
-	InvalidCategory = 0
-	ParentCategory  = 0
-
-	StatusCategoryActive  = 1
-	StatusCategoryDeleted = -1
-
-	QueryCategoryList = `SELECT category_id, value, parent_id, create_time, create_by, update_time, update_by from category where status = 1 and parent_id = $1`
-)
