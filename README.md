@@ -12,6 +12,17 @@ I love the architecture design, thank to share the design @hatajoe, hopefully I 
 ### App Feature
 
 Will soon add more feature to this apps ~
+##### Currently Supported Method
+
+`POST /register`
+
+`GET /auth`
+
+`POST /auth`
+
+`PATCH /auth`
+
+`GET /categories`
 
 ### FAQ
 
