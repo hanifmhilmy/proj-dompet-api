@@ -32,6 +32,7 @@ const (
 	RedigoClient    = "redigo-client"
 	UserUsecase     = "user-usecase"
 	CategoryUsecase = "category-usecase"
+	BalanceUsecase  = "balance-usecase"
 )
 
 // NewContainer is to init new app container
@@ -89,6 +90,21 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 				}
 				repo := repository.NewCategoryRepo(repoClient)
 				return usecase.NewUsecaseCategory(repo, services.NewCategoryService(repoClient, repo)), nil
+			},
+		},
+		{
+			Name: BalanceUsecase,
+			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
+
+				repoClient := repository.Client{
+					DB:    dbClient,
+					Redis: redisClient,
+				}
+				repoBalance := repository.NewBalanceRepository(repoClient)
+				repoBalanceHist := repository.NewBalanceHistRepo(repoClient)
+				return usecase.NewBalanceUsecase(repoBalance, repoBalanceHist, services.NewBalanceService(repoClient, repoBalance, repoBalanceHist)), nil
 			},
 		},
 	}...); err != nil {

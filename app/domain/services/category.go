@@ -4,7 +4,6 @@ import (
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
-	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
 	"github.com/pkg/errors"
 )
 
@@ -14,17 +13,15 @@ type (
 	}
 
 	categoryService struct {
-		clientDB    database.Client
-		clientRedis *redis.Redigo
-		repo        repository.CategoryRepositoryInterface
+		clientDB database.Client
+		repo     repository.CategoryRepositoryInterface
 	}
 )
 
 func NewCategoryService(c repository.Client, r repository.CategoryRepositoryInterface) CategoryServiceInterface {
 	return &categoryService{
-		clientDB:    c.DB,
-		clientRedis: c.Redis,
-		repo:        r,
+		clientDB: c.DB,
+		repo:     r,
 	}
 }
 

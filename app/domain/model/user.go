@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type (
 	// AccountData exposed account data struct
@@ -34,4 +37,8 @@ type (
 		RefreshUUID string
 		UserID      int64
 	}
+)
+
+var (
+	ErrNotLogin = errors.New("error user not login")
 )

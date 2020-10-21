@@ -89,4 +89,6 @@ func registerHTTPRoute(r *httprouter.Router, ctn registry.DIContainer) {
 	r.HandlerFunc("POST", "/register", chainMiddleware(handler.Register, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
 
 	r.HandlerFunc("GET", "/categories", chainMiddleware(handler.GetCategoryList, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
+
+	r.HandlerFunc("POST", "/balance", chainMiddleware(handler.CreateAccountBalance, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions, middlewares.IsAuthorized))
 }
