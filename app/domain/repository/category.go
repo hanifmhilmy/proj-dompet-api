@@ -14,6 +14,10 @@ type (
 	}
 )
 
+const (
+	queryCategoryList = `SELECT category_id, value, parent_id, create_time, create_by, update_time, update_by from category where status = 1 and parent_id = $1`
+)
+
 // NewCategoryRepo initialize dependency category repository
 func NewCategoryRepo(c Client) CategoryRepositoryInterface {
 	return &categoryRepository{
@@ -23,7 +27,7 @@ func NewCategoryRepo(c Client) CategoryRepositoryInterface {
 }
 
 func (cr categoryRepository) GetCategoryList(tx database.Tx, parentID int64) (data []model.CategoryData, err error) {
-	q := tx.Rebind(model.QueryCategoryList)
+	q := tx.Rebind(queryCategoryList)
 	rows, err := tx.Queryx(q, parentID)
 	if err != nil {
 		err = errors.Wrap(err, "[CategoryRepository] Fail to get the list")

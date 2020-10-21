@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type (
 	// AccountData exposed account data struct
@@ -36,19 +39,6 @@ type (
 	}
 )
 
-const (
-	UserStatusDeleted = 0
-	UserStatusActive  = 1
-	UserStatusPending = 2
-
-	UserActionBySystem = 0
-
-	UserNotFound = 0
-
-	LoggedInSuccess  = "Success login"
-	LoggedOutSuccess = "Success logout"
-	SignUpSuccess    = "User Created!"
-	UserUnauthorized = "Unauthorized"
-
-	RedisResetPassKey = "pwd:t_%d"
+var (
+	ErrNotLogin = errors.New("error user not login")
 )

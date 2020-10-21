@@ -25,6 +25,28 @@ func JSONResponse(w http.ResponseWriter, status int, data interface{}) {
 	w.Write(resp)
 }
 
+// CustomJSONResponse tries to convert the given data into a json.
+// Then it uses the given http.ResponseWriter to writes the json in the response.
+// The response headers are updated with 'Content-Type: application/json'
+// and the request status is changed to the given status.
+func CustomJSONResponse(w http.ResponseWriter, status int, reason string, messages []string, data interface{}) {
+	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "application/json")
+
+	result := ResponseWrapper{
+		Header: HeaderResponse{
+			Reason:   reason,
+			Code:     status,
+			Messages: messages,
+		},
+		Result: ResultResponse{
+			Data: data,
+		},
+	}
+	resp, _ := json.Marshal(result)
+	w.Write(resp)
+}
+
 // ReadJSONBody reads the body of the given request.
 // It tries to decode it, as a json, in the given data interface.
 // The data interface must be a pointer.
