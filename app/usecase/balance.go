@@ -41,3 +41,7 @@ func (ub balanceUsecase) CreateAccountBalance(ctx context.Context, data model.Ba
 	}
 	return nil
 }
+
+func (ub balanceUsecase) CreateBalanceRecords(ctx context.Context, data model.BalanceHist) error {
+	return nil
+}

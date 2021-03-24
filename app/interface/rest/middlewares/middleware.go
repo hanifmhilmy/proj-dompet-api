@@ -9,6 +9,8 @@ import (
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/helpers"
 )
 
+type middleware func(http.HandlerFunc) http.HandlerFunc
+
 // SetHeaderOptions set default header options for each request made by the apps
 func SetHeaderOptions(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +85,7 @@ func IsAuthorized(h http.HandlerFunc) http.HandlerFunc {
 func RefreshToken(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		cookie, err := r.Cookie("_RID_Pundi_")
+		cookie, err := r.Cookie("access-token")
 		if err == http.ErrNoCookie {
 			log.Println(cookie)
 			helpers.JSONResponse(w, http.StatusForbidden, auth.ErrMalformedToken.Error())
@@ -114,4 +116,23 @@ func RefreshToken(h http.HandlerFunc) http.HandlerFunc {
 		r = r.WithContext(ctx)
 		h(w, r)
 	}
+}
+
+func Apply(h http.HandlerFunc, m ...middleware) http.HandlerFunc {
+	return applyMiddleware(h, m...)
+}
+
+func applyMiddleware(h http.HandlerFunc, m ...middleware) http.HandlerFunc {
+	// initialize middleware for function
+	if len(m) < 1 {
+		return h
+	}
+	wrapped := h
+
+	// loop in reverse to preserve middleware order
+	for i := len(m) - 1; i >= 0; i-- {
+		wrapped = m[i](wrapped)
+	}
+
+	return wrapped
 }

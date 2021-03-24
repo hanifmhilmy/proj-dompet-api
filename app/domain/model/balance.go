@@ -5,10 +5,10 @@ type (
 	Balance struct {
 		ID         int64   `json:"id"`
 		UID        int64   `json:"uid"`
-		Name       string  `json:"name"`
+		Name       string  `json:"name" validate:"required,min=3,max=50,alphanum"`
 		Color      string  `json:"color"`
 		Status     int     `json:"status"`
-		Values     float64 `json:"values"`
+		Values     float64 `json:"values" validate:"required,numeric"`
 		CurrencyID int32   `json:"currency_id"`
 	}
 
