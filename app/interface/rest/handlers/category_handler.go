@@ -1,4 +1,4 @@
-package delivery
+package handlers
 
 import (
 	"context"
@@ -6,16 +6,29 @@ import (
 	"time"
 
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
+	"github.com/hanifmhilmy/proj-dompet-api/app/interface/rest/middlewares"
 	"github.com/hanifmhilmy/proj-dompet-api/app/registry"
 	"github.com/hanifmhilmy/proj-dompet-api/app/usecase"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/helpers"
+	"github.com/julienschmidt/httprouter"
 )
 
-func (h Handler) GetCategoryList(w http.ResponseWriter, r *http.Request) {
+type category struct {
+	di registry.DIContainer
+}
+
+func RegisterCategory(r *httprouter.Router, ctn registry.DIContainer) {
+	c := category{
+		di: ctn,
+	}
+	r.HandlerFunc("GET", "/categories", middlewares.Apply(c.GetCategoryList, middlewares.PanicRecoveryMiddleware, middlewares.SetHeaderOptions))
+}
+
+func (c category) GetCategoryList(w http.ResponseWriter, r *http.Request) {
 	// Set the timeout
 	ctx, cancel := context.WithTimeout(r.Context(), time.Millisecond*500)
 	defer cancel()
-	u := h.di.Resolve(registry.CategoryUsecase).(usecase.CategoryUsecaseInterface)
+	u := c.di.Resolve(registry.CategoryUsecase).(usecase.CategoryUsecaseInterface)
 
 	categories, err := u.GetCategoryList(ctx)
 	if err != nil {

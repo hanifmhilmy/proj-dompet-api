@@ -1,9 +1,6 @@
 package registry
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/services"
 	"github.com/hanifmhilmy/proj-dompet-api/app/usecase"
@@ -16,7 +13,6 @@ import (
 
 // DIContainer interface container for sarulabs di
 type DIContainer interface {
-	HTTPMiddleware(h http.HandlerFunc) http.HandlerFunc
 	Resolve(name string) interface{}
 	Clean() error
 }
@@ -49,7 +45,7 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 
 	db := database.NewDB(conf)
 	rdg := redis.New(conf)
-	db.Connect([]string{database.DBMain})
+	// db.Connect([]string{database.DBMain})
 	if err := builder.Add([]di.Def{
 		{
 			Name: PostgreMainDB,
@@ -114,13 +110,6 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 	return &Container{
 		ctn: builder.Build(),
 	}, nil
-}
-
-// HTTPMiddleware register http middleware function
-func (c *Container) HTTPMiddleware(h http.HandlerFunc) http.HandlerFunc {
-	return di.HTTPMiddleware(h, c.ctn, func(msg string) {
-		log.Println("Captured: ", msg)
-	})
 }
 
 // Resolve for resolving the function which initialized by the New function
