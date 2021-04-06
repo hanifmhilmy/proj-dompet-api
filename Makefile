@@ -6,6 +6,6 @@ test:
 run:
 	@go run cmd/pundi/main.go
 build:
-	@go build -o dompet cmd/pundi/main.go
+	@go build -o cmd/pundi/dompet cmd/pundi/main.go
 
 .PHONY: default

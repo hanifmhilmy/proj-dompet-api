@@ -4,7 +4,6 @@ import (
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
-	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
 	"github.com/pkg/errors"
 )
 
@@ -14,17 +13,15 @@ type (
 	}
 
 	userService struct {
-		clientDB    database.Client
-		clientRedis *redis.Redigo
-		repo        repository.UserRepositoryInterface
+		clientDB database.Client
+		repo     repository.UserRepositoryInterface
 	}
 )
 
-func NewUserService(r repository.UserRepositoryInterface, db database.Client, redis *redis.Redigo) UserServiceInterface {
+func NewUserService(db database.Client, r repository.UserRepositoryInterface) UserServiceInterface {
 	return &userService{
-		clientDB:    db,
-		clientRedis: redis,
-		repo:        r,
+		clientDB: db,
+		repo:     r,
 	}
 }
 

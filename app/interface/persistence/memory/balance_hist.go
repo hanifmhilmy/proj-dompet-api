@@ -1,7 +1,8 @@
-package repository
+package memory
 
 import (
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
+	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
 )
 
@@ -20,7 +21,7 @@ const (
 )
 
 // NewBalanceHistRepo to initialize the balance history repository dependency
-func NewBalanceHistRepo(client Client) BalanceHistRepositoryInterface {
+func NewBalanceHistRepo(client Client) repository.BalanceHistRepositoryInterface {
 	return &balanceHist{
 		c: client,
 	}

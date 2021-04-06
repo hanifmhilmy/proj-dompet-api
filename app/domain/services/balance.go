@@ -21,9 +21,9 @@ type (
 )
 
 // NewBalanceService is to initiate the service dependency related with balance and the balance history
-func NewBalanceService(c repository.Client, balance repository.BalanceRepositoryInterface, balanceHist repository.BalanceHistRepositoryInterface) BalanceServiceInterface {
+func NewBalanceService(db database.Client, balance repository.BalanceRepositoryInterface, balanceHist repository.BalanceHistRepositoryInterface) BalanceServiceInterface {
 	return &balanceService{
-		clientDB:        c.DB,
+		clientDB:        db,
 		balanceRepo:     balance,
 		balanceHistRepo: balanceHist,
 	}

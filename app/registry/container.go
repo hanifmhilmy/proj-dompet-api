@@ -6,6 +6,7 @@ import (
 
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/services"
+	"github.com/hanifmhilmy/proj-dompet-api/app/interface/persistence/memory"
 	"github.com/hanifmhilmy/proj-dompet-api/app/usecase"
 	"github.com/hanifmhilmy/proj-dompet-api/config"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/auth"
@@ -28,10 +29,19 @@ type Container struct {
 
 const (
 	// PostgreMainDB container built for db main connection
-	PostgreMainDB   = "postgres-db"
-	RedigoClient    = "redigo-client"
+	PostgreMainDB = "postgres-db"
+	RedigoClient  = "redigo-client"
+
+	// usecases
 	UserUsecase     = "user-usecase"
+	BalanceUsecase  = "balance-usecase"
 	CategoryUsecase = "category-usecase"
+
+	// repository
+	UserRepository        = "user-repository"
+	BalanceRepository     = "balance-repository"
+	BalanceHistRepository = "balance-hist-repository"
+	CategoryRepository    = "category-repository"
 )
 
 // NewContainer is to init new app container
@@ -46,9 +56,11 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 		RefreshExpire: conf.Token.RefreshExpire,
 	})
 
+	// init dependency
 	db := database.NewDB(conf)
 	rdg := redis.New(conf)
 	db.Connect([]string{database.DBMain})
+
 	if err := builder.Add([]di.Def{
 		{
 			Name: PostgreMainDB,
@@ -66,29 +78,82 @@ func NewContainer(conf config.Config) (DIContainer, error) {
 			},
 		},
 		{
-			Name: UserUsecase,
+			Name: UserRepository,
 			Build: func(ctn di.Container) (interface{}, error) {
 				dbClient := ctn.Get(PostgreMainDB).(database.Client)
 				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
-				repo := repository.NewUserRepo(repository.Client{
+				repo := memory.NewUserRepo(memory.Client{
 					DB:    dbClient,
 					Redis: redisClient,
 				})
-				return usecase.NewUserUsecase(repo, services.NewUserService(repo, dbClient, redisClient), auth), nil
+				return repo, nil
+			},
+		},
+		{
+			Name: BalanceRepository,
+			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
+				repo := memory.NewBalanceRepository(memory.Client{
+					DB:    dbClient,
+					Redis: redisClient,
+				})
+				return repo, nil
+			},
+		},
+		{
+			Name: BalanceHistRepository,
+			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
+				repo := memory.NewBalanceHistRepo(memory.Client{
+					DB:    dbClient,
+					Redis: redisClient,
+				})
+				return repo, nil
+			},
+		},
+		{
+			Name: CategoryRepository,
+			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
+				repo := memory.NewCategoryRepo(memory.Client{
+					DB:    dbClient,
+					Redis: redisClient,
+				})
+				return repo, nil
+			},
+		},
+		{
+			Name: UserUsecase,
+			Build: func(ctn di.Container) (interface{}, error) {
+				repo, _ := ctn.Get(UserRepository).(repository.UserRepositoryInterface)
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				service := services.NewUserService(dbClient, repo)
+
+				return usecase.NewUserUsecase(repo, service, auth), nil
+			},
+		},
+		{
+			Name: BalanceUsecase,
+			Build: func(ctn di.Container) (interface{}, error) {
+				dbClient := ctn.Get(PostgreMainDB).(database.Client)
+				repo, _ := ctn.Get(BalanceRepository).(repository.BalanceRepositoryInterface)
+				repoHist, _ := ctn.Get(BalanceHistRepository).(repository.BalanceHistRepositoryInterface)
+
+				service := services.NewBalanceService(dbClient, repo, repoHist)
+				return usecase.NewBalanceUsecase(repo, repoHist, service), nil
 			},
 		},
 		{
 			Name: CategoryUsecase,
 			Build: func(ctn di.Container) (interface{}, error) {
 				dbClient := ctn.Get(PostgreMainDB).(database.Client)
-				redisClient := ctn.Get(RedigoClient).(*redis.Redigo)
+				repo := ctn.Get(CategoryRepository).(repository.CategoryRepositoryInterface)
+				service := services.NewCategoryService(dbClient, repo)
 
-				repoClient := repository.Client{
-					DB:    dbClient,
-					Redis: redisClient,
-				}
-				repo := repository.NewCategoryRepo(repoClient)
-				return usecase.NewUsecaseCategory(repo, services.NewCategoryService(repoClient, repo)), nil
+				return usecase.NewUsecaseCategory(repo, service), nil
 			},
 		},
 	}...); err != nil {

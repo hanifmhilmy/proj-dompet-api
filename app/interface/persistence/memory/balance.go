@@ -1,9 +1,10 @@
-package repository
+package memory
 
 import (
 	"time"
 
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
+	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/helpers"
 	"github.com/pkg/errors"
@@ -22,7 +23,7 @@ const (
 )
 
 // NewBalanceRepository is to initialize the balance repository
-func NewBalanceRepository(client Client) BalanceRepositoryInterface {
+func NewBalanceRepository(client Client) repository.BalanceRepositoryInterface {
 	return &balanceRepository{
 		c: client,
 	}

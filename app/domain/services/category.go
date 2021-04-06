@@ -18,9 +18,9 @@ type (
 	}
 )
 
-func NewCategoryService(c repository.Client, r repository.CategoryRepositoryInterface) CategoryServiceInterface {
+func NewCategoryService(db database.Client, r repository.CategoryRepositoryInterface) CategoryServiceInterface {
 	return &categoryService{
-		clientDB: c.DB,
+		clientDB: db,
 		repo:     r,
 	}
 }

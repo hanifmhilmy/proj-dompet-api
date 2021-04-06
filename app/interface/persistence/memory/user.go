@@ -1,4 +1,4 @@
-package repository
+package memory
 
 import (
 	"database/sql"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hanifmhilmy/proj-dompet-api/app/domain/model"
+	"github.com/hanifmhilmy/proj-dompet-api/app/domain/repository"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/database"
 	"github.com/hanifmhilmy/proj-dompet-api/pkg/redis"
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ type (
 )
 
 // NewUserRepo initialize user repository
-func NewUserRepo(c Client) UserRepositoryInterface {
+func NewUserRepo(c Client) repository.UserRepositoryInterface {
 	return &userRepository{
 		db:    c.DB,
 		redis: c.Redis,
